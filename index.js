@@ -162,25 +162,6 @@ app.get("/batalhas/:id/herois/:id", async (req, res) => {
 });
 */
 
-//Heroi por nome
-app.get("/herois/:nome", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * from herois where lower(nome)=lower($1)", [
-      req.params.nome,
-    ]);
-    const herois = result.rows;
-
-    if (!herois.length) {
-      return res.status(404).json({ message: "Heroi não encontrado!" });
-    }
-
-    res.json(herois[0]);
-  } catch (error) {
-    console.log("Erro ao buscar Heroi pelo Nome", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 //Historico de batalha
 app.get('/batalhas', async (req, res) => {
   try {
