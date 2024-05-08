@@ -14,7 +14,7 @@ CREATE TABLE batalha (
     id SERIAL PRIMARY KEY,
     heroi1_id INT NOT NULL,
     heroi2_id INT NOT NULL,
-    ganhador_id INT,
+    vencedor_id INT,
     FOREIGN KEY (heroi1_id) REFERENCES herois(id),
     FOREIGN KEY (heroi2_id) REFERENCES herois(id),
     FOREIGN KEY (vencedor_id) REFERENCES herois(id)
