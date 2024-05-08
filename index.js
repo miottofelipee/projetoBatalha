@@ -46,7 +46,7 @@ app.get("/herois/:id", async (req, res) => {
 });
 
 //POST herois 
-app.post("/heroes", async (req, res) => {
+app.post("/herois", async (req, res) => {
   const { nome, vida, ataque, defesa } = req.body;
 
   try {
@@ -63,13 +63,13 @@ app.post("/heroes", async (req, res) => {
 
 //PUT herois
 app.put("/herois/:id", async (req, res) => {
-  const { id } = req.params;
+  const { id }  = req.params;
   const { nome, vida, ataque, defesa } = req.body;
 
   try {
     await pool.query(
       "UPDATE herois SET nome = $1, vida = $2, ataque = $3, defesa = $4 WHERE id = $5",
-      [nome, vida, ataque, defesa]
+      [nome, vida, ataque, defesa, id]
     );
     res.json("Heroi atualizado");
   } catch (error) {
@@ -96,18 +96,18 @@ app.post("/batalhas", async (req, res) => {
   const { heroi1, heroi2 } = req.body;
 
   try {
-    const heroi11 = await pool.query("SELECT * FROM herois WHERE id = $1", [
+    const heroi111 = await pool.query("SELECT * FROM herois WHERE id = $1", [
       heroi1,
     ]);
-    const heroi22 = await pool.query("SELECT * FROM herois WHERE id = $1", [
+    const heroi222 = await pool.query("SELECT * FROM herois WHERE id = $1", [
       heroi2,
     ]);
 
-    const heroi1Ataque = heroi11.rows[0].ataque;
-    const heroi2Ataque = heroi22.rows[0].ataque;
+    const heroi1Ataque = heroi111.rows[0].ataque;
+    const heroi2Ataque = heroi222.rows[0].ataque;
 
-    let heroi1Vida = heroi11.rows[0].vida;
-    let heroi2Vida = heroi22.rows[0].vida;
+    let heroi1Vida = heroi111.rows[0].vida;
+    let heroi2Vida = heroi222.rows[0].vida;
 
     let vencedor_id = null;
 
@@ -120,11 +120,11 @@ app.post("/batalhas", async (req, res) => {
       vencedor_id = null;
       res.json("Empate");
     } else if (heroi1Vida < heroi2Vida) {
-      vencedor_id = heroi22.rows[0].id;
-      res.json(`${heroi22.rows[0].nome} venceu`);
+      vencedor_id = heroi222.rows[0].id;
+      res.json(`${heroi222.rows[0].nome} venceu`);
     } else {
-      vencedor_id = heroi11.rows[0].id;
-      res.json(`${heroi11.rows[0].nome} venceu`);
+      vencedor_id = heroi111.rows[0].id;
+      res.json(`${heroi111.rows[0].nome} venceu`);
     }
 
     await pool.query(
@@ -137,10 +137,70 @@ app.post("/batalhas", async (req, res) => {
   }
 });
 
+/*Batalha por heroi
+app.get("/batalhas/:id/herois/:id", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM batalha WHERE heroi1_id=$1 OR heroi2_id=$1`,
+      [req.params.id]
+    );
+    const batalhas = result.rows;
 
+    //Se não tiver nenhuma batalha relacionada com o herói retorna mensagem de erro
+    if (!batalhas.length) {
+      return res.status(404).json({ message: "Héroi sem batalhas" });
+    }
 
+    let vencedores = batallasPorHeroi(batallasPorData(batallasOrdenadas(batalla)));
+    vencedores = vencedores.filter((vencedor_id) => vencedor_id === req.params.heroiId);
 
+    res.json(vencedores);
+  } catch (error) {
+    console.log("Erro na busca das batalhas do Héroe", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+*/
 
+//Heroi por nome
+app.get("/herois/:nome", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * from herois where lower(nome)=lower($1)", [
+      req.params.nome,
+    ]);
+    const herois = result.rows;
+
+    if (!herois.length) {
+      return res.status(404).json({ message: "Heroi não encontrado!" });
+    }
+
+    res.json(herois[0]);
+  } catch (error) {
+    console.log("Erro ao buscar Heroi pelo Nome", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//Historico de batalha
+app.get('/batalhas', async (req, res) => {
+  try {
+      const { rows } = await pool.query('SELECT * FROM batalha');
+      res.json(rows);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+//Heroi por nome
+app.get('/herois/nome/:nome', async (req, res) => {
+  const { nome } = req.params;
+  try {
+      const { rows } = await pool.query('SELECT * FROM herois WHERE nome = $1', [nome]);
+      res.json(rows);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}💤`);
